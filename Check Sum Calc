@@ -1,0 +1,34 @@
+'*********************************************************************************
+'Program Name: Check Sum Calculate
+'
+'Author: Austin K
+'
+'Purpose: This VBScript script takes three parameters and calculates the sum 
+'and average of the three numbers.
+'
+'Discription: Basic WSH script written in NotePad++
+'
+'How to run: cscript w2_first_lastname.vbs 123
+'
+'Date Created: 02/18/2023
+'*********************************************************************************
+
+Option Explicit
+
+' Define variables
+Dim num1, num2, num3, sum, avg
+
+' Assign values to variables
+num1 = WScript.Arguments.Item(0)
+num2 = WScript.Arguments.Item(1)
+num3 = WScript.Arguments.Item(2)
+
+' Calculate sum and average
+sum = num1 + num2 + num3
+avg = sum / 3
+
+' Display 
+WScript.Echo "The sum of " & num1 & ", " & num2 & ", and " & num3 & " is " & sum & "."
+WScript.Echo "The avresultserage of " & num1 & ", " & num2 & ", and " & num3 & " is " & avg & "."
+
+' End of script
