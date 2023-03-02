@@ -1,0 +1,36 @@
+'****************************************************************************************
+'Program name: Check File                                                              **
+'Author: Austin Karling                                                                **
+'Purpose: To get the size, date created and name of a folder                           **                                                
+'Description: Basic WSH script written in NotePad++                                    **                                    
+'How to run: cscript w3_first_lastName.vbs "c:\filename"                               **
+'Date Created: February 22 2023                                                        **
+'****************************************************************************************
+
+' Check if the parameter is passed or not
+If WScript.Arguments.Count = 0 Then
+    WScript.Echo "Please provide folder path as argument."
+    WScript.Quit
+End If
+
+' Get the folder name from the argument
+folderName = WScript.Arguments.Item(0)
+
+' Check if the folder exists
+Set fso = CreateObject("Scripting.FileSystemObject")
+If Not fso.FolderExists(folderName) Then
+    WScript.Echo "Folder " & folderName & " does not exist."
+    WScript.Quit
+End If
+
+' Get the folder object
+Set folder = fso.GetFolder(folderName)
+
+' Print header
+WScript.Echo "FileName" & vbTab & "Size" & vbTab & "Date Created"
+
+' Loop through all files in the folder
+For Each file In folder.Files
+    ' Print file details
+    WScript.Echo file.Name & vbTab & file.Size & vbTab & file.DateCreated
+Next
