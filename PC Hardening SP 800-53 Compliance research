@@ -1,0 +1,85 @@
+<#
+.SYNOPSIS
+Script to harden personal computer security.
+
+.DESCRIPTION
+This script implements a set of security controls to enhance the security of a personal computer, including disabling unnecessary services, enabling and configuring Windows Firewall, and enabling BitLocker for full disk encryption.
+
+.AUTHOR
+Austin K.
+
+.LINK
+https://github.com/FalloutEden/PC Hardening SP 800-53 Compliance research
+
+#>
+
+# Harden-PCSecurity.ps1
+
+# Function to log actions
+function Write-Log {
+    param (
+        [string]$Message
+    )
+    $TimeStamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    Write-Host "$TimeStamp - $Message"
+}
+
+# Disable unnecessary services
+$servicesToDisable = @(
+    'Fax',
+    'RemoteRegistry',
+    'WMPNetworkSvc',
+    'XblAuthManager',
+    'XblGameSave',
+    'XboxGipSvc',
+    'XboxNetApiSvc'
+)
+
+foreach ($service in $servicesToDisable) {
+    Write-Log "Disabling service: $service"
+    Set-Service -Name $service -StartupType Disabled -ErrorAction SilentlyContinue
+}
+
+# Enable and configure Windows Firewall
+Write-Log "Enabling and configuring Windows Firewall"
+Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled True -DefaultInboundAction Block -DefaultOutboundAction Allow -NotifyOnListen True -AllowUnicastResponseToMulticast True
+
+# Configure User Account Control settings
+Write-Log "Configuring User Account Control settings"
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value 2
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "PromptOnSecureDesktop" -Value 1
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "EnableLUA" -Value 1
+
+# Set User Account Control to the highest level
+Write-Log "Setting User Account Control to the highest level"
+$UACLevel = 5
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value $UACLevel
+
+# Disable auto-run for removable media
+Write-Log "Disabling auto-run for removable media"
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoAutorun" -Value 1
+
+# Enable BitLocker
+Write-Log "Enabling BitLocker"
+Enable-BitLocker -MountPoint "C:" -SkipHardwareTest -UsedSpaceOnly -RecoveryPasswordProtector
+
+# Set password policies
+Write-Log "Setting password policies"
+$complexityEnabled = 1
+$minimumPasswordLength = 12
+$maximumPasswordAge = (New-TimeSpan -Days 60).TotalDays
+$minimumPasswordAge = 1
+Set-LocalUser -Name * -PasswordComplexity $complexityEnabled -PasswordLength $minimumPasswordLength -PasswordHistoryCount 5 -MaximumPasswordAge $maximumPasswordAge -MinimumPasswordAge $minimumPasswordAge
+
+# Enable Windows Defender
+Write-Log "Enabling Windows Defender"
+Set-MpPreference -EnableRealtimeMonitoring $true -DisablePrivacyMode $false -MAPSReporting OptIn -SubmitSamplesConsent NotSet
+
+# Disable unnecessary features
+Write-Log "Disabling unnecessary features"
+Disable-WindowsOptionalFeature -Online -FeatureName "SMB1Protocol","Printing-Foundation-Features","Printing-Server-Features","Printing-Client-Features"
+
+# Configure Windows Update
+Write-Log "Configuring Windows Update"
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update" -Name
+
