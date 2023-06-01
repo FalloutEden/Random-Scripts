@@ -1,10 +1,10 @@
 import ctypes
 import random
-import os
 import time
 import win32gui
 import win32process
 import win32con
+import psutil
 
 # List of insults
 insults = [
@@ -21,17 +21,17 @@ insults = [
 ]
 
 # Name of the target application
-app_name = "Notepad.exe"
+app_name = "notepad.exe"
 
 def find_notepad_hwnd():
     def enum_windows_callback(hwnd, _):
         _, pid = win32process.GetWindowThreadProcessId(hwnd)
         try:
-            process = win32process.OpenProcess(win32con.PROCESS_QUERY_INFORMATION | win32con.PROCESS_VM_READ, False, pid)
-            process_name = win32process.GetModuleFileNameEx(process, 0)
-            if os.path.basename(process_name).lower() == app_name.lower():
+            process = psutil.Process(pid)
+            process_name = process.name()
+            if process_name.lower() == app_name.lower():
                 hwnd_list.append(hwnd)
-        except Exception:
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
 
     hwnd_list = []
