@@ -1,0 +1,57 @@
+import ctypes
+import random
+import os
+import time
+import win32gui
+import win32process
+import win32con
+
+# List of insults
+insults = [
+    "Your mother was a hamster and your father smelled of elderberries!",
+    "I fart in your general direction!",
+    "You're a looney!",
+    "Your brain is as dry as the remainder biscuit after a voyage!",
+    "You're a complete peasant!",
+    "Go away, or I shall taunt you a second time!",
+    "You have the manners of a beggar!",
+    "Your father was a swine and your mother smelled of dog food!",
+    "I wave my private parts at your aunties!",
+    "You tiny-brained wipers of other people's bottoms!"
+]
+
+# Name of the target application
+app_name = "Notepad.exe"
+
+def find_notepad_hwnd():
+    def enum_windows_callback(hwnd, _):
+        _, pid = win32process.GetWindowThreadProcessId(hwnd)
+        try:
+            process = win32process.OpenProcess(win32con.PROCESS_QUERY_INFORMATION | win32con.PROCESS_VM_READ, False, pid)
+            process_name = win32process.GetModuleFileNameEx(process, 0)
+            if os.path.basename(process_name).lower() == app_name.lower():
+                hwnd_list.append(hwnd)
+        except Exception:
+            pass
+
+    hwnd_list = []
+    win32gui.EnumWindows(enum_windows_callback, None)
+
+    return hwnd_list[0] if hwnd_list else None
+
+def main():
+    notepad_hwnd = None
+
+    while True:
+        time.sleep(1)
+        current_notepad_hwnd = find_notepad_hwnd()
+
+        if notepad_hwnd and not current_notepad_hwnd:
+            insult = random.choice(insults)
+            ctypes.windll.user32.MessageBoxW(None, insult, "Insult", 0x30)
+            # Insert code here to perform an action on forced close
+
+        notepad_hwnd = current_notepad_hwnd
+
+if __name__ == '__main__':
+    main()
