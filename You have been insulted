@@ -1,9 +1,6 @@
 import ctypes
 import random
 import time
-import win32gui
-import win32process
-import win32con
 import psutil
 
 # List of insults
@@ -20,38 +17,33 @@ insults = [
     "You tiny-brained wipers of other people's bottoms!"
 ]
 
-# Name of the target application
-app_name = "notepad.exe"
+# Name of the target applications
+app_names = ["notepad.exe", "chrome.exe", "msedge.exe"]
 
-def find_notepad_hwnd():
-    def enum_windows_callback(hwnd, _):
-        _, pid = win32process.GetWindowThreadProcessId(hwnd)
-        try:
-            process = psutil.Process(pid)
-            process_name = process.name()
-            if process_name.lower() == app_name.lower():
-                hwnd_list.append(hwnd)
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-            pass
-
-    hwnd_list = []
-    win32gui.EnumWindows(enum_windows_callback, None)
-
-    return hwnd_list[0] if hwnd_list else None
+def find_target_pids():
+    target_pids = set()
+    for proc in psutil.process_iter(['pid', 'name']):
+        if proc.info['name'] and proc.info['name'].lower() in app_names:
+            target_pids.add(proc.info['pid'])
+    return target_pids
 
 def main():
-    notepad_hwnd = None
-
+    last_seen = {}
     while True:
         time.sleep(1)
-        current_notepad_hwnd = find_notepad_hwnd()
+        current_target_pids = find_target_pids()
 
-        if notepad_hwnd and not current_notepad_hwnd:
-            insult = random.choice(insults)
-            ctypes.windll.user32.MessageBoxW(None, insult, "Insult", 0x30)
-            # Insert code here to perform an action on forced close
+        # Update last_seen for current processes
+        now = time.time()
+        for pid in current_target_pids:
+            last_seen[pid] = now
 
-        notepad_hwnd = current_notepad_hwnd
+        # Check if any processes have disappeared for a few seconds
+        for pid, last_time in list(last_seen.items()):
+            if now - last_time > 3:  # adjust the delay as needed
+                del last_seen[pid]
+                insult = random.choice(insults)
+                ctypes.windll.user32.MessageBoxW(None, insult, "Insult", 0x30)
 
 if __name__ == '__main__':
     main()
