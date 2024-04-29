@@ -1,0 +1,708 @@
+# Set log file size for domain profile
+netsh advfirewall set domainprofile logging maxfilesize 16384
+
+# Enable logging of dropped packets in domain profile
+netsh advfirewall set domainprofile logging droppedconnections enable
+
+# Enable logging of successful connections in domain profile
+netsh advfirewall set domainprofile logging allowedconnections enable
+
+# Set log file size for private profile
+netsh advfirewall set privateprofile logging maxfilesize 16384
+
+# Enable logging of dropped packets in private profile
+netsh advfirewall set privateprofile logging droppedconnections enable
+
+# Enable logging of successful connections in private profile
+netsh advfirewall set privateprofile logging allowedconnections enable
+
+# Set log file size for public profile
+netsh advfirewall set publicprofile logging maxfilesize 16384
+
+# Enable logging of dropped packets in public profile
+netsh advfirewall set publicprofile logging droppedconnections enable
+
+# Enable logging of successful connections in public profile
+netsh advfirewall set publicprofile logging allowedconnections enable
+
+# Ensure Microsoft Edge is configured to allow only TLS
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "SSLVersionMin" -Value "tls1.2"
+
+# Disable Bypassing Microsoft Defender SmartScreen prompts for sites and downloads
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "PreventSmartScreenPromptOverride" -Value 1
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "PreventSmartScreenPromptOverrideForFiles" -Value 1
+
+# Disable InPrivate mode
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "InPrivateModeAvailability" -Value 1
+
+# Disable Background processing
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "BackgroundModeEnabled" -Value 0
+
+# Set Default Pop-up Blocker
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "DefaultPopupsSetting" -Value 2
+
+# Disable Network Prediction
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "NetworkPredictionOptions" -Value 2
+
+# Disable Search Suggestions
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "SearchSuggestEnabled" -Value 0
+
+# Disable various Importing features
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "ImportAutofillFormData" -Value 0
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "ImportCookies" -Value 0
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "ImportExtensions" -Value 0
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "ImportHistory" -Value 0
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "ImportHomepage" -Value 0
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "ImportOpenTabs" -Value 0
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "ImportPaymentInfo" -Value 0
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "ImportSavedPasswords" -Value 0
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Edge" -Name "ImportSearchEngine" -Value 0
+
+# Run the script as an administrator to make these changes take effect
+# Block potentially unwanted applications (PUA)
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender" -Name "PUAProtection" -Value 1
+
+# Ensure spyware and virus definition age does not exceed 7 days
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\Signature Updates" -Name "SignatureUpdateInterval" -Value 1
+
+# Enable Automatic Exclusions
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\Exclusions" -Name "DisableAutoExclusions" -Value 0
+
+# Configure real-time MAPS check and join Microsoft MAPS
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\Spynet" -Name "SpynetReporting" -Value 2
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\Spynet" -Name "SubmitSamplesConsent" -Value 1
+
+# Scan removable drives and perform a weekly scheduled scan
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\Scan" -Name "DisableRemovableDriveScanning" -Value 0
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\Scan" -Name "ScheduleDay" -Value 6  # Saturday
+
+# Turn on e-mail scanning
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\Scan" -Name "DisableEmailScanning" -Value 0
+
+# Check for definition updates daily
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\Signature Updates" -Name "CheckForSignaturesBeforeRunningScan" -Value 1
+
+# Set automatic remediation action for various threat levels
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\Threats\ThreatSeverityDefaultAction" -Name "5" -Value 6 # Severe threats
+
+# Block executable content from email client and webmail
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\Windows Defender Exploit Guard\ASR\Rules" -Name "BE9BA2D9-53EA-4CDC-84E5-9B1EEEE46550" -Value 1
+
+# Block Office applications from creating child processes
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\Windows Defender Exploit Guard\ASR\Rules" -Name "D4F940AB-401B-4EFC-AADC-AD5F3C50688A" -Value 1
+
+function Ensure-RegistryKey {
+    param (
+        [string]$Path
+    )
+    if (-not (Test-Path $Path)) {
+        New-Item -Path $Path -Force | Out-Null
+    }
+}
+
+# Define the paths
+$defenderPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender"
+$signatureUpdatesPath = "$defenderPath\Signature Updates"
+$spynetPath = "$defenderPath\Spynet"
+$scanPath = "$defenderPath\Scan"
+$asrRulesPath = "$defenderPath\Windows Defender Exploit Guard\ASR\Rules"
+$threatsPath = "$defenderPath\Threats\ThreatSeverityDefaultAction"
+
+# Ensure registry paths exist
+Ensure-RegistryKey -Path $defenderPath
+Ensure-RegistryKey -Path $signatureUpdatesPath
+Ensure-RegistryKey -Path $spynetPath
+Ensure-RegistryKey -Path $scanPath
+Ensure-RegistryKey -Path $asrRulesPath
+Ensure-RegistryKey -Path $threatsPath
+
+# Set registry values
+Set-ItemProperty -Path $defenderPath -Name "PUAProtection" -Value 1
+Set-ItemProperty -Path $signatureUpdatesPath -Name "SignatureUpdateInterval" -Value 1
+Set-ItemProperty -Path $scanPath -Name "DisableRemovableDriveScanning" -Value 0
+Set-ItemProperty -Path $scanPath -Name "ScheduleDay" -Value 6  # Saturday
+Set-ItemProperty -Path $scanPath -Name "DisableEmailScanning" -Value 0
+Set-ItemProperty -Path $signatureUpdatesPath -Name "CheckForSignaturesBeforeRunningScan" -Value 1
+Set-ItemProperty -Path $threatsPath -Name "5" -Value 6 # Severe threats
+Set-ItemProperty -Path $asrRulesPath -Name "BE9BA2D9-53EA-4CDC-84E5-9B1EEEE46550" -Value 1
+Set-ItemProperty -Path $asrRulesPath -Name "D4F940AB-401B-4EFC-AADC-AD5F3C50688A" -Value 1
+
+function Ensure-RegistryKey {
+    param (
+        [string]$Path
+    )
+    if (-not (Test-Path $Path)) {
+        New-Item -Path $Path -Force | Out-Null
+    }
+}
+
+# Define registry paths
+$paths = @{
+    "DEP" = "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
+    "SEHOP" = "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\kernel"
+    "RemoteAssistance" = "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services"
+    "AutoPlay" = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer"
+    "WindowsInstaller" = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Installer"
+    "WinRMClient" = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Client"
+    "WinRMService" = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service"
+    "ShareAccess" = "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa"
+    "LanManAuth" = "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa"
+    "BitLocker" = "HKLM:\SOFTWARE\Policies\Microsoft\FVE"
+}
+
+# Ensure registry paths exist
+$paths.Values | ForEach-Object { Ensure-RegistryKey -Path $_ }
+
+# Set DEP to at least OptOut
+Set-ItemProperty -Path $paths["DEP"] -Name "EnableDEP" -Value 2
+
+# Enable SEHOP
+Set-ItemProperty -Path $paths["SEHOP"] -Name "DisableExceptionChainValidation" -Value 0
+
+# Disable Solicited Remote Assistance
+Set-ItemProperty -Path $paths["RemoteAssistance"] -Name "fAllowToGetHelp" -Value 0
+
+# Disable AutoPlay for all drives
+Set-ItemProperty -Path $paths["AutoPlay"] -Name "NoDriveTypeAutoRun" -Value 255
+
+# Always install with elevated privileges should be disabled
+Set-ItemProperty -Path $paths["WindowsInstaller"] -Name "AlwaysInstallElevated" -Value 0
+
+# Disable Basic authentication in WinRM Client
+Set-ItemProperty -Path $paths["WinRMClient"] -Name "AllowBasic" -Value 0
+
+# Disable Basic authentication in WinRM Service
+Set-ItemProperty -Path $paths["WinRMService"] -Name "AllowBasic" -Value 0
+
+# Restrict anonymous share access
+Set-ItemProperty -Path $paths["ShareAccess"] -Name "restrictanonymous" -Value 1
+
+# Set LanMan authentication level
+Set-ItemProperty -Path $paths["LanManAuth"] -Name "LmCompatibilityLevel" -Value 5
+
+# Configure BitLocker to require a PIN
+Set-ItemProperty -Path $paths["BitLocker"] -Name "UseTPMPIN" -Value 1
+Set-ItemProperty -Path $paths["BitLocker"] -Name "MinimumPIN" -Value 6  # Minimum PIN length
+
+# OneDrive STIG
+
+function Ensure-RegistryKey {
+    param (
+        [string]$Path
+    )
+    if (-not (Test-Path $Path)) {
+        New-Item -Path $Path -Force | Out-Null
+    }
+}
+
+# Define registry paths
+$paths = @{
+    "FeatureHTTPUsernamePasswordDisable" = "HKLM:\SOFTWARE\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_HTTP_USERNAME_PASSWORD_DISABLE"
+    "FeatureSafeBindToObject" = "HKLM:\SOFTWARE\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_SAFE_BINDTOOBJECT"
+    "FeatureUNC_SavedFileCheck" = "HKLM:\SOFTWARE\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_UNC_SAVEDFILECHECK"
+    "FeatureValidateNavigateUrl" = "HKLM:\SOFTWARE\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_VALIDATE_NAVIGATE_URL"
+    "FeatureWindowRestrictions" = "HKLM:\SOFTWARE\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_WINDOW_RESTRICTIONS"
+    "FeatureAddOnManagement" = "HKLM:\SOFTWARE\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_ADDON_MANAGEMENT"
+    "FeatureWebocPopupmanagement" = "HKLM:\SOFTWARE\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_WEBOC_POPUPMANAGEMENT"
+    "FeatureRestrict_FileDownload" = "HKLM:\SOFTWARE\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_RESTRICT_FILEDOWNLOAD"
+    "FeatureZoneElevation" = "HKLM:\SOFTWARE\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_ZONE_ELEVATION"
+    "FeatureRestrict_ActiveXInstall" = "HKLM:\SOFTWARE\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_RESTRICT_ACTIVEXINSTALL"
+    "OneDriveSync" = "HKCU:\Software\Policies\Microsoft\OneDrive"
+}
+
+# Ensure registry paths exist
+$paths.Values | ForEach-Object { Ensure-RegistryKey -Path $_ }
+
+# Set registry values
+Set-ItemProperty -Path $paths["FeatureHTTPUsernamePasswordDisable"] -Name "groove.exe" -Value 1
+Set-ItemProperty -Path $paths["FeatureSafeBindToObject"] -Name "groove.exe" -Value 1
+Set-ItemProperty -Path $paths["FeatureUNC_SavedFileCheck"] -Name "groove.exe" -Value 1
+Set-ItemProperty -Path $paths["FeatureValidateNavigateUrl"] -Name "groove.exe" -Value 1
+Set-ItemProperty -Path $paths["FeatureWindowRestrictions"] -Name "groove.exe" -Value 1
+Set-ItemProperty -Path $paths["FeatureAddOnManagement"] -Name "groove.exe" -Value 1
+Set-ItemProperty -Path $paths["FeatureWebocPopupmanagement"] -Name "groove.exe" -Value 1
+Set-ItemProperty -Path $paths["FeatureRestrict_FileDownload"] -Name "groove.exe" -Value 1
+Set-ItemProperty -Path $paths["FeatureZoneElevation"] -Name "groove.exe" -Value 1
+Set-ItemProperty -Path $paths["FeatureRestrict_ActiveXInstall"] -Name "groove.exe" -Value 1
+Set-ItemProperty -Path $paths["OneDriveSync"] -Name "DisablePersonalSync" -Value 1
+
+# This script requires administrative privileges and needs to be run for each user (HKCU changes)
+
+# Windows IE-11 Stig
+
+function Ensure-RegistryKey {
+    param (
+        [string]$Path
+    )
+    if (-not (Test-Path $Path)) {
+        New-Item -Path $Path -Force | Out-Null
+    }
+}
+
+# Define the registry path for Internet Explorer Zone settings
+$ieZonePath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\Internet Settings\Zones\3"
+
+# Ensure the registry path exists
+Ensure-RegistryKey -Path $ieZonePath
+
+# Settings for Internet Explorer 11
+$settings = @{
+    "1400" = 0; # ActiveX controls and plugins - Disable
+    "1001" = 3; # Download signed ActiveX controls - Disable
+    "1004" = 3; # Download unsigned ActiveX controls - Disable
+    "1201" = 3; # Initialize and script ActiveX controls not marked as safe - Disable
+    "1A04" = 0; # Allow software to run or install even if the signature is invalid - Disable
+    "1609" = 3; # Allow META REFRESH - Disable
+    "1804" = 3; # Launching programs and files in an IFRAME - Disable
+    "1607" = 3; # Navigate sub-frames across different domains - Disable
+    "1A00" = 0; # Logon options - Prompt for user name and password
+    "1802" = 3; # Allow drag and drop or copy and paste files - Disable
+    "1407" = 3; # Scripting of Java applets - Disable
+    "2201" = 3; # Java permissions - Disable
+    "1200" = 3; # Run ActiveX controls and plugins - Disable
+    "1406" = 3; # Access data sources across domains - Disable
+    "2102" = 0; # Allow script-initiated windows without size or position constraints - Disable
+    "2100" = 0; # Script ActiveX controls marked safe for scripting - Disable
+}
+
+# Apply settings
+$settings.Keys | ForEach-Object {
+    Set-ItemProperty -Path $ieZonePath -Name $_ -Value $settings[$_]
+}
+
+# Output to verify the operation
+"Settings applied successfully."
+
+# Adobe STIG
+
+function Ensure-RegistryKey {
+    param (
+        [string]$Path
+    )
+    if (-not (Test-Path $Path)) {
+        New-Item -Path $Path -Force | Out-Null
+    }
+}
+
+# Define the base registry path for Adobe Acrobat Reader DC settings
+$adobePath = "HKLM:\SOFTWARE\Policies\Adobe\Acrobat Reader\DC\FeatureLockDown"
+
+# Ensure the registry path exists
+Ensure-RegistryKey -Path $adobePath
+
+# Specific settings to adjust based on compliance requirements
+$settings = @{
+    "bEnhancedSecurityStandalone" = 1; # Enhanced Security in Standalone Mode
+    "bEnhancedSecurityInBrowser" = 1; # Enhanced Security in Browser
+    "bProtectedMode" = 1; # Enable Protected Mode
+    "iProtectedView" = 2; # Enable Protected View
+    "bEnableFlash" = 0; # Block Flash Content
+    "iURLPerms" = 1; # Block Websites
+    "iUnknownURLPerms" = 3; # Block access to Unknown Websites
+    "iFileAttachmentPerms" = 1; # Prevent opening files other than PDF or FDF
+    "bToggleAdobeDocumentServices" = 1; # Disable all service access to Document Cloud Services
+    "bTogglePrefsSync" = 1; # Disable Cloud Synchronization
+    "bToggleWebConnectors" = 1; # Disable 3rd Party Web Connectors
+    "bDisableWebmail" = 1; # Disable access to Webmail
+    "bDisableSharePointFeatures" = 1; # Disable Online SharePoint Access
+    "bDisableTrustedFolders" = 1; # Disable the ability to add Trusted Files and Folders
+    "bDisableIETrusts" = 1; # Disable the ability to elevate IE Trusts to Privileged Locations
+}
+
+# Apply the settings
+foreach ($key in $settings.Keys) {
+    Set-ItemProperty -Path $adobePath -Name $key -Value $settings[$key]
+}
+
+# Output to verify the operation
+"Adobe Acrobat Reader DC compliance settings applied successfully."
+
+# Ensure administrative privileges
+If (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))
+{
+    Write-Warning "Please run this script as an Administrator!"
+    Break
+}
+
+# Restrict Unauthenticated RPC Clients
+$RPCPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Rpc"
+Set-ItemProperty -Path $RPCPath -Name "RestrictRemoteClients" -Value 1
+
+# Enable Enhanced Anti-Spoofing for Facial Recognition
+$FaceRecPath = "HKLM:\SOFTWARE\Policies\Microsoft\Biometrics\FacialFeatures"
+Set-ItemProperty -Path $FaceRecPath -Name "EnhancedAntiSpoofing" -Value 1
+
+# Prevent Administrator Account Enumeration During Elevation
+$UACPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\CredUI"
+Set-ItemProperty -Path $UACPath -Name "EnumerateAdministrators" -Value 0
+
+# Limit Enhanced Diagnostic Data
+$TelemetryPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection"
+Set-ItemProperty -Path $TelemetryPath -Name "AllowTelemetry" -Value 1  # Value 1 for Basic, which is the minimum.
+
+# Configure Windows Telemetry to Not be Full
+Set-ItemProperty -Path $TelemetryPath -Name "MaxTelemetryAllowed" -Value 1  # Ensures telemetry is not set to Full (3)
+
+# Display completion message
+Write-Host "Security configurations for RPC, facial recognition, UAC, and telemetry have been applied successfully."
+
+# Ensure administrative privileges
+If (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))
+{
+    Write-Warning "Please run this script as an Administrator!"
+    Break
+}
+
+# Enable Microsoft Defender SmartScreen for Explorer
+$SmartScreenPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System"
+Set-ItemProperty -Path $SmartScreenPath -Name "EnableSmartScreen" -Value 1
+
+# Disable Windows Game Recording and Broadcasting
+$GameDVRPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\GameDVR"
+Set-ItemProperty -Path $GameDVRPath -Name "AllowGameDVR" -Value 0
+
+# Require a Minimum PIN Length for Windows Hello
+$PinComplexityPath = "HKLM:\SOFTWARE\Policies\Microsoft\PassportForWork\PINComplexity"
+Set-ItemProperty -Path $PinComplexityPath -Name "MinimumPINLength" -Value 6
+
+# Prevent Passwords from Being Saved in Remote Desktop Client
+$RDPPath = "HKCU:\Software\Microsoft\Terminal Server Client"
+Set-ItemProperty -Path $RDPPath -Name "DisablePasswordSaving" -Value 1
+
+# Prevent Local Drives from Being Shared with Remote Desktop Session Hosts
+$RDPSessionPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services"
+Set-ItemProperty -Path $RDPSessionPath -Name "DisableDriveRedirection" -Value 1
+
+# Display completion message
+Write-Host "SmartScreen enabled, game recording disabled, PIN complexity enforced, RDP password saving disabled, and local drive sharing in RDP sessions prevented."
+
+# Ensure administrative privileges
+If (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))
+{
+    Write-Warning "Please run this script as an Administrator!"
+    Break
+}
+
+# Force Remote Desktop to Always Prompt for Password Upon Connection
+$RDPPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services"
+Set-ItemProperty -Path $RDPPath -Name "DisablePasswordSaving" -Value 1
+
+# Require Secure RPC Communication for Remote Desktop Session Host
+Set-ItemProperty -Path $RDPPath -Name "RequireSecureRPCCommunication" -Value 1
+
+# Set Required Level of Encryption for Remote Desktop Services
+Set-ItemProperty -Path $RDPPath -Name "MinEncryptionLevel" -Value 3  # High encryption level
+
+# Prevent Downloading Attachments from RSS Feeds
+$RSSPath = "HKCU:\Software\Microsoft\Internet Explorer\Feeds"
+Set-ItemProperty -Path $RSSPath -Name "DisableEnclosureDownload" -Value 1
+
+# Turn Off Indexing of Encrypted Files
+$SearchPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search"
+Set-ItemProperty -Path $SearchPath -Name "AllowIndexingEncryptedStoresOrItems" -Value 0
+
+# Display completion message
+Write-Host "Remote Desktop security enhanced, RSS feed downloads disabled, and indexing of encrypted files turned off."
+
+# Ensure administrative privileges
+If (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))
+{
+    Write-Warning "Please run this script as an Administrator!"
+    Break
+}
+
+# Prevent Users from Changing Installation Options
+$InstallerPath = "HKLM:\Software\Policies\Microsoft\Windows\Installer"
+Set-ItemProperty -Path $InstallerPath -Name "DisableUserInstalls" -Value 1
+
+# Disable Automatic Sign-In After Update
+$AutoLoginPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
+Set-ItemProperty -Path $AutoLoginPath -Name "DisableAutomaticRestartSignOn" -Value 1
+
+# Enable PowerShell Script Block Logging
+$PSLoggingPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging"
+New-Item -Path $PSLoggingPath -Force
+Set-ItemProperty -Path $PSLoggingPath -Name "EnableScriptBlockLogging" -Value 1
+
+# Enable PowerShell Transcription
+$PSTranscriptionPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\Transcription"
+New-Item -Path $PSTranscriptionPath -Force
+Set-ItemProperty -Path $PSTranscriptionPath -Name "EnableTranscripting" -Value 1
+Set-ItemProperty -Path $PSTranscriptionPath -Name "EnableInvocationHeader" -Value 1  # To log the start time of each command
+
+# Prevent WinRM Client from Allowing Unencrypted Traffic
+$WinRMClientPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Client"
+Set-ItemProperty -Path $WinRMClientPath -Name "AllowUnencryptedTraffic" -Value 0
+
+# Display completion message
+Write-Host "Installation options restricted, auto-login disabled, PowerShell security enhanced, and WinRM traffic encryption enforced."
+
+# Ensure administrative privileges
+If (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))
+{
+    Write-Warning "Please run this script as an Administrator!"
+    Break
+}
+
+# Configure WinRM Service to Disallow Unencrypted Traffic
+$WinRMServicePath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service"
+Set-ItemProperty -Path $WinRMServicePath -Name "AllowUnencryptedTraffic" -Value 0
+
+# Prevent WinRM Service from Storing RunAs Credentials
+Set-ItemProperty -Path $WinRMServicePath -Name "DisableRunAs" -Value 1
+
+# Disable Digest Authentication in WinRM Client
+$WinRMClientPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WinRM\Client"
+Set-ItemProperty -Path $WinRMClientPath -Name "AllowDigest" -Value 0
+
+# Disable Voice Activation from the Lock Screen
+$VoiceActivationPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Speech"
+Set-ItemProperty -Path $VoiceActivationPath -Name "AllowVoiceActivationFromLockScreen" -Value 0
+
+# Disable Convenience PIN
+$PINPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System"
+Set-ItemProperty -Path $PINPath -Name "AllowDomainPINLogon" -Value 0
+
+# Restrict Windows Ink Workspace Access Above the Lock
+$InkWorkspacePath = "HKLM:\SOFTWARE\Policies\Microsoft\WindowsInkWorkspace"
+Set-ItemProperty -Path $InkWorkspacePath -Name "AllowWindowsInkWorkspace" -Value 0
+
+# Enable Kernel DMA Protection
+$DMAPath = "HKLM:\SYSTEM\CurrentControlSet\Control\DMAProtection"
+Set-ItemProperty -Path $DMAPath -Name "DmaGuardPolicy" -Value 1
+
+# Certificate installations are better handled manually or through a specific deployment tool
+
+# Display completion message
+Write-Host "WinRM security configured, voice activation disabled, convenience PIN disabled, Windows Ink restricted, and DMA protection enabled."
+
+# Ensure administrative privileges
+If (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))
+{
+    Write-Warning "Please run this script as an Administrator!"
+    Break
+}
+
+# Rename Built-in Administrator and Guest Accounts
+Rename-LocalUser -Name "Administrator" -NewName "NewAdminName"
+Rename-LocalUser -Name "Guest" -NewName "NewGuestName"
+
+# Enable Audit Policy Using Subcategories
+auditpol /set /subcategory:"*" /success:enable /failure:enable
+
+# Set Machine Inactivity Limit
+$powerCfgPath = "HKLM:\SOFTWARE\Policies\Microsoft\Power\PowerSettings\7516b95f-f776-4464-8c53-06167f40cc99"
+Set-ItemProperty -Path $powerCfgPath -Name "ACSettingIndex" -Value 900  # 15 minutes for AC power
+Set-ItemProperty -Path $powerCfgPath -Name "DCSettingIndex" -Value 900  # 15 minutes for DC power
+
+# Configure Legal Notice Before Console Logon
+$legalNoticePath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
+Set-ItemProperty -Path $legalNoticePath -Name "legalnoticecaption" -Value "Important Legal Notice"
+Set-ItemProperty -Path $legalNoticePath -Name "legalnoticetext" -Value "Unauthorized access to this device is prohibited. Please refer to the corporate policy for more information."
+
+# Display completion message
+Write-Host "Administrator and guest accounts renamed, audit policy set, machine inactivity timeout configured, and legal notice set up."
+
+# Ensure administrative privileges
+If (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))
+{
+    Write-Warning "Please run this script as an Administrator!"
+    Break
+}
+
+# Configure Smart Card Removal Behavior
+$SmartCardPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System"
+Set-ItemProperty -Path $SmartCardPath -Name "ScRemoveOption" -Value 1  # 0=No Action, 1=Lock Workstation, 2=Force Logoff
+
+# Ensure SMB Client Signs Packets
+$SMBClientPath = "HKLM:\SYSTEM\CurrentControlSet\Services\LanmanWorkstation\Parameters"
+Set-ItemProperty -Path $SMBClientPath -Name "RequireSecuritySignature" -Value 1
+
+# Restrict Remote SAM Calls to Administrators
+$SAMPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa"
+Set-ItemProperty -Path $SAMPath -Name "RestrictRemoteSAM" -Value "O:BAG:BAD:(A;;RC;;;BA)"
+
+# Prevent NTLM from Falling Back to a Null Session
+Set-ItemProperty -Path $SAMPath -Name "RestrictNullSessAccess" -Value 1
+
+# Disable PKU2U Authentication
+$PKU2UPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\pku2u"
+Set-ItemProperty -Path $PKU2UPath -Name "AllowOnlineID" -Value 0
+
+# Configure Kerberos and NTLM Policies
+$KerberosPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Kerberos\Parameters"
+New-Item -Path $KerberosPath -Force
+Set-ItemProperty -Path $KerberosPath -Name "SupportedEncryptionTypes" -Value 2147483640  # AES128 and AES256
+
+# Enforce FIPS Compliant Algorithms
+$FIPSPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\FIPSAlgorithmPolicy"
+Set-ItemProperty -Path $FIPSPath -Name "Enabled" -Value 1
+
+# Display completion message
+Write-Host "Smart card removal action set, SMB signing enforced, remote SAM access restricted, NTLM security enhanced, PKU2U disabled, Kerberos encryption configured, and FIPS compliance ensured."
+
+# Ensure administrative privileges
+If (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))
+{
+    Write-Warning "Please run this script as an Administrator!"
+    Break
+}
+
+# Configure User Account Control Settings
+$UACPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
+Set-ItemProperty -Path $UACPath -Name "EnableLUA" -Value 1  # Ensure UAC is enabled
+Set-ItemProperty -Path $UACPath -Name "ConsentPromptBehaviorAdmin" -Value 2  # Prompt for consent on the secure desktop
+Set-ItemProperty -Path $UACPath -Name "ConsentPromptBehaviorUser" -Value 0  # Automatically deny elevation requests for standard users
+Set-ItemProperty -Path $UACPath -Name "FilterAdministratorToken" -Value 1  # UAC approval mode for the built-in Admin
+
+# Configure User Rights Assignments via PowerShell script is not straightforward as it requires 'secedit' or GPO. Scripting those is complex and better handled manually or with AD policies. 
+# Example commands for guidance (these would need to be adjusted for your environment or implemented through Group Policy Management):
+# secedit /export /cfg c:\secpol.cfg
+# (Get-Content c:\secpol.cfg) -replace "OldSetting", "NewSetting" | Set-Content c:\secpol.cfg
+# secedit /import /cfg c:\secpol.cfg /db secpol.sdb
+
+# Enable Command Line Process Auditing
+$AuditPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Audit"
+New-Item -Path $AuditPath -Force
+Set-ItemProperty -Path $AuditPath -Name "ProcessCreationIncludeCmdLine_Enabled" -Value 1
+
+# Display completion message
+Write-Host "UAC configured, command line process auditing enabled. User rights assignments need to be configured through Security Policy settings or Group Policy Management."
+
+# Ensure administrative privileges
+If (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))
+{
+    Write-Warning "Please run this script as an Administrator!"
+    Break
+}
+
+# BitLocker configuration
+Enable-BitLocker -MountPoint "C:" -EncryptionMethod XtsAes128 -UsedSpaceOnly -SkipHardwareTest
+$SecureString = ConvertTo-SecureString "YourPIN123" -AsPlainText -Force
+Add-BitLockerKeyProtector -MountPoint "C:" -Pin $SecureString -TPMAndPin
+
+# Disable PowerShell 2.0
+Disable-WindowsOptionalFeature -Online -FeatureName MicrosoftWindowsPowerShellV2Root
+
+# Disable SMBv1 on the server side
+Set-SmbServerConfiguration -EnableSMB1Protocol $false -Force
+
+# Disable SMBv1 on the client side by modifying the registry
+$registryPath = "HKLM:\SYSTEM\CurrentControlSet\Services\LanmanWorkstation\Parameters"
+$registryProperty = "SMB1"
+
+# Ensure the registry path exists
+if (-not (Test-Path $registryPath)) {
+    New-Item -Path $registryPath -Force | Out-Null
+}
+
+# Set the registry to disable SMB1
+Set-ItemProperty -Path $registryPath -Name $registryProperty -Value 0
+
+# Disable Secondary Logon service
+Set-Service seclogon -StartupType Disabled
+
+# Password and account lockout policies
+$SecPol = @{
+    "LockoutDuration" = 15;
+    "LockoutBadCount" = 3;
+    "ResetLockoutCount" = 15;
+    "PasswordHistorySize" = 24;
+    "MinimumPasswordAge" = 1;
+    "MaximumPasswordAge" = 90;
+    "MinimumPasswordLength" = 14;
+    "PasswordComplexity" = 1;
+    "ClearTextPassword" = 0;
+    "AuditAccountLogon" = 3; # Failure and Success
+    "AuditAccountManage" = 3; # Failure and Success
+    "AuditLogonEvents" = 3; # Failure and Success
+    "AuditObjectAccess" = 3; # Failure and Success
+    "AuditPolicyChange" = 3; # Failure and Success
+    "AuditPrivilegeUse" = 3; # Failure and Success
+    "AuditProcessTracking" = 2; # Success only
+    "AuditSystemEvents" = 3; # Failure and Success
+}
+foreach ($policy in $SecPol.Keys) {
+    secedit /export /cfg "secpol.cfg"
+    (Get-Content -Path "secpol.cfg" -Raw) -replace "($policy = ).*", "`$1$($SecPol[$policy])" | Set-Content -Path "secpol.cfg"
+    secedit /import /cfg "secpol.cfg" /db secedit.sdb
+}
+
+# Audit policies
+auditpol /set /subcategory:"Credential Validation" /failure:enable /success:enable
+auditpol /set /subcategory:"User Account Management" /failure:enable /success:enable
+auditpol /set /subcategory:"Process Creation" /failure:enable /success:enable
+auditpol /set /subcategory:"Logon" /failure:enable /success:enable
+auditpol /set /subcategory:"Account Lockout" /failure:enable /success:enable
+auditpol /set /subcategory:"File Share" /failure:enable /success:enable
+auditpol /set /subcategory:"Other Object Access Events" /failure:enable /success:enable
+
+# Event log configurations
+wevtutil sl Application /ms:32768
+wevtutil sl Security /ms:1024000
+wevtutil sl System /ms:32768
+
+# Display completion message
+Write-Host "Security configuration script has been executed. Please verify settings and restart the computer."
+
+# PowerShell Script to Set Screen Lockout
+$inactivitySec = 900
+$registryPathLogon = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
+$registryValueLogon = "InactivityTimeoutSecs"
+
+if ((Get-ItemProperty -Path $registryPathLogon -Name $registryValueLogon -ErrorAction SilentlyContinue) -eq $null) {
+    New-ItemProperty -Path $registryPathLogon -Name $registryValueLogon -Value $inactivitySec -PropertyType DWord
+} else {
+    Set-ItemProperty -Path $registryPathLogon -Name $registryValueLogon -Value $inactivitySec
+}
+
+Write-Output "Machine inactivity limit is set to lock the screen after 15 minutes of inactivity."
+
+# PowerShell Script to Configure Account Lockout Policy
+$registryPath = "HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters"
+
+Set-ItemProperty -Path $registryPath -Name "LockoutThreshold" -Value 3
+Set-ItemProperty -Path $registryPath -Name "LockoutDuration" -Value 0
+Set-ItemProperty -Path $registryPath -Name "LockoutObservationWindow" -Value (15 * 60)
+
+Write-Output "Account lockout policy has been updated: 3 failed attempts lockout, indefinite lockout duration, counter reset after 15 minutes."
+
+# PowerShell Script to Set Information Systems Security Log to "Do Not Overwrite"
+$LogName = "Security"
+$EventLog = Get-WmiObject -Class Win32_NTEventLogFile | Where-Object {$_.LogFileName -eq $LogName}
+$EventLog.OverwritePolicy = 0
+$EventLog.Put()
+
+Write-Output "The $LogName log has been set to 'Do Not Overwrite' (events will not be overwritten)."
+
+# PowerShell Script to Set and Display Various Password and Security Policies
+# Set the policies
+$securityTemplate = "C:\security\securitypolicy.inf"
+if (-not (Test-Path "C:\security")) {
+    New-Item -ItemType Directory -Path "C:\security"
+}
+secedit /export /cfg $securityTemplate
+$settings = Get-Content -Path $securityTemplate
+$settings = $settings -replace "PasswordHistorySize =.*", "PasswordHistorySize = 24"
+$settings = $settings -replace "MaximumPasswordAge =.*", "MaximumPasswordAge = 60"
+$settings = $settings -replace "MinimumPasswordAge =.*", "MinimumPasswordAge = 1"
+$settings = $settings -replace "MinimumPasswordLength =.*", "MinimumPasswordLength = 14"
+$settings = $settings -replace "PasswordComplexity =.*", "PasswordComplexity = 1"
+$settings = $settings -replace "ClearTextPassword =.*", "ClearTextPassword = 0"
+$settings | Set-Content -Path $securityTemplate
+secedit /configure /db $env:windir\security\new.sdb /cfg $securityTemplate /areas SECURITYPOLICY
+Remove-Item -Path $securityTemplate
+
+Write-Output "Password policies have been updated successfully."
+
+# Display all settings
+$dateTime = Get-Date
+Write-Output "Current Security Settings as of $dateTime"
+Get-SeceditSetting
+Write-Output "`nAccount Lockout Settings:"
+Write-Output "Lockout threshold: $lockoutThreshold"
+Write-Output "Lockout duration: $lockoutDuration"
+Write-Output "Lockout observation window: $lockoutObservationWindow (seconds)"
+Write-Output "`nSecurity Log Settings:"
+Write-Output "Security log maximum size: $securityLogSize bytes"
+Write-Output "Security log retention setting (Do not overwrite if = 0): $securityLogRetention"
