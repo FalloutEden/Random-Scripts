@@ -1,0 +1,52 @@
+# PowerShell script to retrieve and save potentially suspicious security logs from an exported file, filtering for events outside business hours, and open the results
+
+# Path to the exported .evtx file
+$evtxFilePath = "C:\Path\To\Your\File.evtx"
+
+# Define the list of suspicious event IDs
+$suspiciousEventIDs = @(4625, 4720)
+
+# Define business hours as TimeSpan objects
+$businessStart = New-TimeSpan -Hours 9
+$businessEnd = New-TimeSpan -Hours 16
+
+# Output file path
+$outputFilePath = "C:\Path\To\Your\FilteredResults.csv"
+
+# Create or clear the file
+if (Test-Path $outputFilePath) {
+    Clear-Content $outputFilePath
+} else {
+    New-Item $outputFilePath -ItemType File
+}
+
+# Add CSV header
+"Time Created, User, Computer" | Out-File $outputFilePath -Append
+
+# Loop through each suspicious event ID
+foreach ($eventID in $suspiciousEventIDs) {
+    # Query the event log from the exported file
+    $events = Get-WinEvent -Path $evtxFilePath -FilterXPath "*[System[EventID=$eventID]]"
+
+    # Check if any events are found
+    if ($events) {
+        $filteredEvents = $events | Where-Object {
+            # Extract the time from the TimeCreated and compare it against business hours
+            $eventTime = New-TimeSpan -Hours $_.TimeCreated.Hour -Minutes $_.TimeCreated.Minute
+            $eventTime -lt $businessStart -or $eventTime -gt $businessEnd
+        }
+
+        # Output to CSV if filtered events exist
+        foreach ($event in $filteredEvents) {
+            $eventXML = [xml]$event.ToXml()
+            $eventData = $eventXML.Event.EventData.Data
+
+            # Construct CSV line
+            $csvLine = "$($event.TimeCreated), $($eventData[1].'#text'), $($eventData[5].'#text')"
+            $csvLine | Out-File $outputFilePath -Append
+        }
+    }
+}
+
+# Open the CSV file in the default application
+Invoke-Item $outputFilePath
