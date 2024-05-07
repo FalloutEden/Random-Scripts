@@ -1,0 +1,33 @@
+Sub MatchAndCopyData()
+    Dim ws1 As Worksheet, ws2 As Worksheet
+    Dim wb1 As Workbook, wb2 As Workbook
+    Dim matchRange As Range, outputRange As Range
+    Dim i As Long, j As Long
+    Dim matchFound As Boolean
+
+    ' Set references to the workbooks and worksheets
+    ' Update "Workbook1" and "Workbook2" to the names of your workbooks
+    ' Update "Sheet1" and "Sheet2" to the names of your sheets
+    Set wb1 = Workbooks("Workbook1.xlsx")
+    Set wb2 = Workbooks("Workbook2.xlsx")
+    Set ws1 = wb1.Sheets("Sheet1")
+    Set ws2 = wb2.Sheets("Sheet2")
+
+    ' Loop through B2 to B1001 in the first sheet
+    For i = 2 To 1001
+        matchFound = False
+        ' Check for each cell in F7 to F1625 in the second sheet
+        For j = 7 To 1625
+            If ws1.Cells(i, 2).Value = ws2.Cells(j, 6).Value Then
+                ' Copy the adjacent data from G7:G1625 when a match is found
+                ws1.Cells(i, 1).Value = "CCI-" & ws2.Cells(j, 7).Value
+                matchFound = True
+                Exit For
+            End If
+        Next j
+        ' If no match is found, you might want to clear any previous data
+        If Not matchFound Then
+            ws1.Cells(i, 1).Value = ""
+        End If
+    Next i
+End Sub
