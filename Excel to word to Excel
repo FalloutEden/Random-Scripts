@@ -1,5 +1,4 @@
 Sub FindSectionsAndUpdate()
-
     Dim excelRange As Range
     Dim cell As Range
     Dim wordApp As Object
@@ -7,11 +6,15 @@ Sub FindSectionsAndUpdate()
     Dim wordContent As Object
     Dim foundText As Boolean
     Dim section As String
+    Dim maxLength As Integer
+    
+    ' Set the maximum length for the search string
+    maxLength = 255  ' Adjust this based on what you find works best
 
     ' Initialize Word application
     Set wordApp = CreateObject("Word.Application")
     wordApp.Visible = True
-    
+
     ' Open the Word document
     Set wordDoc = wordApp.Documents.Open("C:\Path\To\Your\Document.docx")
     Set wordContent = wordDoc.Content
@@ -21,14 +24,18 @@ Sub FindSectionsAndUpdate()
 
     ' Loop through each cell in Column T
     For Each cell In excelRange
-        foundText = wordContent.Find.Execute(FindText:=cell.Value, MatchWholeWord:=True, MatchCase:=False)
-        
-        ' If found, get the section number
-        If foundText Then
-            section = "See section " & wordContent.Paragraphs(1).Range.ListFormat.ListString
-            ThisWorkbook.Sheets("Sheet1").Cells(cell.Row, 4).Value = section ' Column D
+        If Len(cell.Value) <= maxLength Then
+            foundText = wordContent.Find.Execute(FindText:=cell.Value, MatchWholeWord:=True, MatchCase:=False)
+            
+            ' If found, get the section number
+            If foundText Then
+                section = "See section " & wordContent.Paragraphs(1).Range.ListFormat.ListString
+                ThisWorkbook.Sheets("Sheet1").Cells(cell.Row, 4).Value = section  ' Column D
+            Else
+                ThisWorkbook.Sheets("Sheet1").Cells(cell.Row, 4).Value = "N/A"
+            End If
         Else
-            ThisWorkbook.Sheets("Sheet1").Cells(cell.Row, 4).Value = "N/A"
+            ThisWorkbook.Sheets("Sheet1").Cells(cell.Row, 4).Value = "Text too long"
         End If
     Next cell
 
@@ -37,5 +44,4 @@ Sub FindSectionsAndUpdate()
     wordApp.Quit
     Set wordDoc = Nothing
     Set wordApp = Nothing
-
 End Sub
