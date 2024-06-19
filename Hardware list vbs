@@ -1,0 +1,43 @@
+' Define the file path for the hardware list CSV
+Dim filePath
+filePath = "C:\hardware_list.csv"
+
+' Function to write data to CSV
+Sub WriteToCSV(filePath, data)
+    Dim fso, file, textStream
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    ' Check if file exists, if not create and write headers
+    If Not fso.FileExists(filePath) Then
+        Set file = fso.CreateTextFile(filePath, True)
+        file.WriteLine "Name,Serial Number,Quantity"
+    Else
+        Set file = fso.OpenTextFile(filePath, 8, True) ' 8 for appending
+    End If
+    
+    ' Write data to the file
+    file.WriteLine data
+    file.Close
+End Sub
+
+' Main script
+Do
+    Dim name, serialNumber, quantity, data
+    
+    ' Prompt user for hardware details
+    name = InputBox("Enter the hardware name (or type 'exit' to quit):", "Hardware List")
+    If LCase(name) = "exit" Then Exit Do
+    
+    serialNumber = InputBox("Enter the serial number:", "Hardware List")
+    quantity = InputBox("Enter the quantity:", "Hardware List")
+    
+    ' Prepare data string
+    data = name & "," & serialNumber & "," & quantity
+    
+    ' Write data to CSV
+    WriteToCSV filePath, data
+    
+    MsgBox "Hardware item added successfully!", vbInformation, "Success"
+Loop
+
+MsgBox "Hardware list creation completed!", vbInformation, "Completed"
