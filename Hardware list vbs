@@ -1,58 +1,42 @@
-Option Explicit
+Sub CreateHardwareList()
+    ' Define variables
+    Dim ws As Worksheet
+    Dim name As String
+    Dim serialNumber As String
+    Dim quantity As String
+    Dim row As Long
 
-' Define constants
-Const xlWorkbookNormal = -4143
+    ' Create a new worksheet
+    Set ws = ThisWorkbook.Worksheets.Add
+    ws.Name = "Hardware List"
 
-' Create Excel application object
-Dim objExcel, objWorkbook, objWorksheet
-Set objExcel = CreateObject("Excel.Application")
-objExcel.Visible = True
+    ' Define headers
+    ws.Cells(1, 1).Value = "Name"
+    ws.Cells(1, 2).Value = "Serial Number"
+    ws.Cells(1, 3).Value = "Quantity"
 
-' Create a new workbook and set the worksheet
-Set objWorkbook = objExcel.Workbooks.Add
-Set objWorksheet = objWorkbook.Worksheets(1)
+    ' Start at the second row
+    row = 2
 
-' Define headers
-objWorksheet.Cells(1, 1).Value = "Name"
-objWorksheet.Cells(1, 2).Value = "Serial Number"
-objWorksheet.Cells(1, 3).Value = "Quantity"
+    ' Main loop for scanning and entering data
+    Do
+        ' Prompt user for hardware details
+        name = InputBox("Enter the hardware name (or type 'exit' to quit):", "Hardware List")
+        If LCase(name) = "exit" Then Exit Do
+        
+        serialNumber = InputBox("Enter the serial number:", "Hardware List")
+        quantity = InputBox("Enter the quantity:", "Hardware List")
+        
+        ' Populate the worksheet
+        ws.Cells(row, 1).Value = name
+        ws.Cells(row, 2).Value = serialNumber
+        ws.Cells(row, 3).Value = quantity
+        
+        ' Increment the row
+        row = row + 1
+        
+        MsgBox "Hardware item added successfully!", vbInformation, "Success"
+    Loop
 
-' Start at the second row
-Dim row
-row = 2
-
-' Main loop for scanning and entering data
-Do
-    Dim name, serialNumber, quantity
-    
-    ' Prompt user for hardware details
-    name = InputBox("Enter the hardware name (or type 'exit' to quit):", "Hardware List")
-    If LCase(name) = "exit" Then Exit Do
-    
-    serialNumber = InputBox("Enter the serial number:", "Hardware List")
-    quantity = InputBox("Enter the quantity:", "Hardware List")
-    
-    ' Populate the worksheet
-    objWorksheet.Cells(row, 1).Value = name
-    objWorksheet.Cells(row, 2).Value = serialNumber
-    objWorksheet.Cells(row, 3).Value = quantity
-    
-    ' Increment the row
-    row = row + 1
-    
-    MsgBox "Hardware item added successfully!", vbInformation, "Success"
-Loop
-
-' Save the workbook
-Dim filePath
-filePath = "C:\hardware_list.xlsx"
-objWorkbook.SaveAs(filePath, xlWorkbookNormal)
-objWorkbook.Close False
-objExcel.Quit
-
-' Clean up
-Set objWorksheet = Nothing
-Set objWorkbook = Nothing
-Set objExcel = Nothing
-
-MsgBox "Hardware list creation completed! The file is saved at " & filePath, vbInformation, "Completed"
+    MsgBox "Hardware list creation completed!", vbInformation, "Completed"
+End Sub
