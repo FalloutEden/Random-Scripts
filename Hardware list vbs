@@ -1,28 +1,29 @@
-' Define the file path for the hardware list CSV
-Dim filePath
-filePath = "C:\hardware_list.csv"
+Option Explicit
 
-' Function to write data to CSV
-Sub WriteToCSV(filePath, data)
-    Dim fso, file, textStream
-    Set fso = CreateObject("Scripting.FileSystemObject")
-    
-    ' Check if file exists, if not create and write headers
-    If Not fso.FileExists(filePath) Then
-        Set file = fso.CreateTextFile(filePath, True)
-        file.WriteLine "Name,Serial Number,Quantity"
-    Else
-        Set file = fso.OpenTextFile(filePath, 8, True) ' 8 for appending
-    End If
-    
-    ' Write data to the file
-    file.WriteLine data
-    file.Close
-End Sub
+' Define constants
+Const xlWorkbookNormal = -4143
 
-' Main script
+' Create Excel application object
+Dim objExcel, objWorkbook, objWorksheet
+Set objExcel = CreateObject("Excel.Application")
+objExcel.Visible = True
+
+' Create a new workbook and set the worksheet
+Set objWorkbook = objExcel.Workbooks.Add
+Set objWorksheet = objWorkbook.Worksheets(1)
+
+' Define headers
+objWorksheet.Cells(1, 1).Value = "Name"
+objWorksheet.Cells(1, 2).Value = "Serial Number"
+objWorksheet.Cells(1, 3).Value = "Quantity"
+
+' Start at the second row
+Dim row
+row = 2
+
+' Main loop for scanning and entering data
 Do
-    Dim name, serialNumber, quantity, data
+    Dim name, serialNumber, quantity
     
     ' Prompt user for hardware details
     name = InputBox("Enter the hardware name (or type 'exit' to quit):", "Hardware List")
@@ -31,13 +32,27 @@ Do
     serialNumber = InputBox("Enter the serial number:", "Hardware List")
     quantity = InputBox("Enter the quantity:", "Hardware List")
     
-    ' Prepare data string
-    data = name & "," & serialNumber & "," & quantity
+    ' Populate the worksheet
+    objWorksheet.Cells(row, 1).Value = name
+    objWorksheet.Cells(row, 2).Value = serialNumber
+    objWorksheet.Cells(row, 3).Value = quantity
     
-    ' Write data to CSV
-    WriteToCSV filePath, data
+    ' Increment the row
+    row = row + 1
     
     MsgBox "Hardware item added successfully!", vbInformation, "Success"
 Loop
 
-MsgBox "Hardware list creation completed!", vbInformation, "Completed"
+' Save the workbook
+Dim filePath
+filePath = "C:\hardware_list.xlsx"
+objWorkbook.SaveAs(filePath, xlWorkbookNormal)
+objWorkbook.Close False
+objExcel.Quit
+
+' Clean up
+Set objWorksheet = Nothing
+Set objWorkbook = Nothing
+Set objExcel = Nothing
+
+MsgBox "Hardware list creation completed! The file is saved at " & filePath, vbInformation, "Completed"
